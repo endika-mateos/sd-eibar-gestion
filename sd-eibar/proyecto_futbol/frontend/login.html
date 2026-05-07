@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Acceso - SD Eibar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #003366;
+        }
+
+        .card-login {
+            border-top: 5px solid #a20025;
+            border-radius: 12px;
+        }
+
+        .btn-eibar {
+            background-color: #a20025;
+            color: white;
+            transition: 0.2s;
+        }
+
+        .btn-eibar:hover {
+            background-color: #82001c;
+            color: white;
+        }
+
+        .text-eibar-blue {
+            color: #003366;
+        }
+    </style>
+</head>
+
+<body class="d-flex align-items-center vh-100">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5 col-lg-4">
+                <div class="card card-login shadow-lg p-4 bg-white border-0">
+
+                    <div class="text-center mb-4 mt-2">
+                        <h3 class="fw-bold text-eibar-blue mb-0">SD EIBAR</h3>
+                        <span class="text-muted small">Plataforma de Gestión Deportiva</span>
+                    </div>
+
+                    <form id="form-login">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">Usuario</label>
+                            <input type="text" id="usuario" class="form-control form-control-lg bg-light border-0"
+                                required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-secondary small">Contraseña</label>
+                            <input type="password" id="password" class="form-control form-control-lg bg-light border-0"
+                                required>
+                        </div>
+                        <button type="submit" class="btn btn-lg w-100 btn-eibar fw-bold">Iniciar Sesión</button>
+                    </form>
+
+                    <!-- Mensaje de error del login -->
+                    <div id="error-msg" class="text-danger mt-3 text-center d-none fw-semibold small"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('form-login').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const usuario = document.getElementById('usuario').value;
+            const password = document.getElementById('password').value;
+
+            fetch('../backend/login.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuario, password })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.ok) {
+                        // Login correcto, redirige al dashboard
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        // Mostramos el error debajo del formulario
+                        const errorDiv = document.getElementById('error-msg');
+                        errorDiv.textContent = data.error;
+                        errorDiv.classList.remove('d-none');
+                    }
+                });
+        });
+    </script>
+
+</body>
+
+</html>

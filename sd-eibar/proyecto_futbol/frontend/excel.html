@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Subir Excel - SD Eibar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        :root {
+            --eibar-blue: #003366;
+            --eibar-red: #a20025;
+        }
+
+        .navbar-eibar {
+            background-color: var(--eibar-blue) !important;
+            border-bottom: 4px solid var(--eibar-red);
+        }
+
+        .text-eibar-blue {
+            color: var(--eibar-blue) !important;
+        }
+
+        /* Fila de jugador */
+        .jugador-row {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+        }
+
+        .btn-remove {
+            color: var(--eibar-red);
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+
+        .btn-remove:hover {
+            color: #82001c;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-eibar shadow">
+        <div class="container py-2">
+            <a class="navbar-brand d-flex align-items-center gap-3 fw-bold fs-4" href="dashboard.html">
+                <img src="../assets/sdeibarlogo.png" alt="Escudo SD Eibar" class="d-inline-block align-text-top"
+                    style="height: 60px; width: auto;"> Sistema SD Eibar
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
+                data-bs-target="#menuNavegacion">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="menuNavegacion">
+                <div class="navbar-nav ms-auto gap-3 align-items-center mt-3 mt-lg-0">
+                    <a href="dashboard.html" class="nav-link text-white opacity-75">Inicio</a>
+                    <a href="jugadores.html" class="nav-link text-white opacity-75">Jugadores</a>
+                    <a href="temporadas.html" class="nav-link text-white opacity-75">Temporadas</a>
+                    <a href="partidos.html" class="nav-link text-white opacity-75">Partidos</a>
+                    <a href="lesiones.html" class="nav-link text-white opacity-75">Lesiones</a>
+                    <div class="ms-lg-4 ps-lg-4 border-start border-secondary d-flex align-items-center">
+                        <a href="login.html" id="btn-login"
+                            class="btn btn-warning btn-sm rounded-pill fw-bold text-dark px-4 shadow-sm">Iniciar
+                            Sesión</a>
+                        <button id="btn-logout" class="btn btn-danger btn-sm rounded-pill fw-bold d-none px-4 shadow-sm"
+                            onclick="cerrarSesion()">Cerrar Sesión</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-lg rounded-4 p-5">
+
+                    <h3 class="text-eibar-blue mb-1 fw-bold text-center">
+                        <i class="bi bi-file-earmark-excel me-2"></i>Importar Estadísticas
+                    </h3>
+                    <p class="text-muted text-center mb-4">Añade los jugadores con su Excel y calcula las puntuaciones
+                    </p>
+
+                    <!-- Cabecera de la tabla -->
+                    <div class="row g-2 mb-2 px-1">
+                        <div class="col-1 text-muted small fw-semibold">#</div>
+                        <div class="col-5 text-muted small fw-semibold">Jugador</div>
+                        <div class="col-5 text-muted small fw-semibold">Archivo Excel</div>
+                        <div class="col-1"></div>
+                    </div>
+
+                    <!-- Lista dinamica de filas jugador + excel -->
+                    <div id="lista-jugadores"></div>
+
+                    <!-- Boton añadir fila -->
+                    <button onclick="añadirFila()"
+                        class="btn btn-outline-secondary btn-sm rounded-pill mt-2 fw-semibold">
+                        <i class="bi bi-plus-circle me-1"></i>Añadir jugador
+                    </button>
+
+                    <hr class="my-4">
+
+                    <!-- Boton calcular -->
+                    <div class="text-center">
+                        <button onclick="calcularTodos()" id="btn-calcular"
+                            class="btn btn-lg px-5 rounded-pill shadow-sm fw-semibold text-white"
+                            style="background-color: var(--eibar-red);">
+                            <i class="bi bi-lightning-charge me-2"></i>Calcular Puntuaciones
+                        </button>
+                    </div>
+
+                    <!-- Mensaje de estado -->
+                    <div id="mensaje" class="text-center fw-bold mt-3"></div>
+
+                    <!-- Barra de progreso -->
+                    <div id="progreso-wrap" class="mt-3 d-none">
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span id="progreso-texto">Procesando...</span>
+                            <span id="progreso-num">0 / 0</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div id="progreso-barra"
+                                class="progress-bar bg-success progress-bar-striped progress-bar-animated"
+                                style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de resultados -->
+                    <div id="resultados" class="mt-4 d-none">
+                        <hr>
+                        <h6 class="fw-bold text-eibar-blue mb-3">Resultados:</h6>
+                        <div id="tabla-resultados"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== SESION =====
+
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('../backend/check_session.php')
+                .then(res => res.json())
+                .then(data => {
+                    const btnLogin = document.getElementById('btn-login');
+                    const btnLogout = document.getElementById('btn-logout');
+                    if (data.ok) {
+                        btnLogin.classList.add('d-none');
+                        btnLogout.classList.remove('d-none');
+                    } else {
+                        btnLogin.classList.remove('d-none');
+                        btnLogout.classList.add('d-none');
+                    }
+                });
+
+            // Cargamos jugadores y añadimos primera fila automaticamente
+            cargarJugadores().then(() => añadirFila());
+        });
+
+        function cerrarSesion() {
+            fetch('../backend/logout.php')
+                .then(res => res.json())
+                .then(data => { if (data.ok) window.location.reload(); });
+        }
+
+        // ===== JUGADORES DISPONIBLES =====
+
+        let jugadoresDisponibles = [];
+
+        function cargarJugadores() {
+            return fetch('../backend/jugadores/get_jugadores.php')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.ok) jugadoresDisponibles = data.data;
+                });
+        }
+
+        // ===== FILAS DINAMICAS =====
+
+        function añadirFila() {
+            const lista = document.getElementById('lista-jugadores');
+            const idx = lista.children.length;
+            const div = document.createElement('div');
+            div.className = 'jugador-row';
+            div.dataset.idx = idx;
+
+            const opciones = jugadoresDisponibles.map(j =>
+                `<option value="${j.id_jugador}">
+                    ${j.dorsal ? '#' + j.dorsal + ' · ' : ''}${j.nombre} ${j.apellidos} (${j.posicion_habitual})
+                </option>`
+            ).join('');
+
+            div.innerHTML = `
+                <div class="row g-2 align-items-center">
+                    <div class="col-1">
+                        <span class="text-muted small fw-semibold num-fila">${idx + 1}</span>
+                    </div>
+                    <div class="col-5">
+                        <select class="form-select form-select-sm sel-jugador">
+                            <option value="">-- Selecciona --</option>
+                            ${opciones}
+                        </select>
+                    </div>
+                    <div class="col-5">
+                        <input type="file" accept=".xlsx,.xls"
+                            class="form-control form-control-sm inp-excel">
+                    </div>
+                    <div class="col-1 text-center">
+                        <button class="btn-remove" onclick="eliminarFila(this)" title="Eliminar fila">
+                            <i class="bi bi-x-circle-fill"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- Estado de esta fila (se rellena al procesar) -->
+                <div class="fila-estado mt-1 d-none small"></div>`;
+
+            lista.appendChild(div);
+            actualizarNumeracion();
+        }
+
+        function eliminarFila(btn) {
+            const lista = document.getElementById('lista-jugadores');
+            if (lista.children.length <= 1) return;
+            btn.closest('.jugador-row').remove();
+            actualizarNumeracion();
+        }
+
+        function actualizarNumeracion() {
+            document.querySelectorAll('.jugador-row').forEach((fila, i) => {
+                fila.querySelector('.num-fila').textContent = i + 1;
+            });
+        }
+
+        // ===== CALCULAR TODOS =====
+
+        async function calcularTodos() {
+            const filas = document.querySelectorAll('.jugador-row');
+            const mensaje = document.getElementById('mensaje');
+            const btn = document.getElementById('btn-calcular');
+
+            // Validamos que todas las filas tengan jugador y Excel
+            let valido = true;
+            filas.forEach(fila => {
+                const jugador = fila.querySelector('.sel-jugador').value;
+                const archivo = fila.querySelector('.inp-excel').files[0];
+                if (!jugador || !archivo) valido = false;
+            });
+
+            if (!valido) {
+                mensaje.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>Cada fila debe tener un jugador y su Excel seleccionado.</span>`;
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="bi bi-hourglass-split me-2"></i>Procesando...`;
+            mensaje.innerHTML = '';
+            document.getElementById('resultados').classList.add('d-none');
+
+            // Mostramos la barra de progreso
+            const progresoWrap = document.getElementById('progreso-wrap');
+            const progresoBarra = document.getElementById('progreso-barra');
+            const progresoTexto = document.getElementById('progreso-texto');
+            const progresoNum = document.getElementById('progreso-num');
+
+            progresoWrap.classList.remove('d-none');
+            progresoBarra.classList.add('progress-bar-animated');
+            progresoBarra.style.width = '0%';
+
+            const resultados = [];
+            let procesados = 0;
+            const total = filas.length;
+
+            // Procesamos cada fila de forma secuencial
+            for (const fila of filas) {
+                const id_jugador = fila.querySelector('.sel-jugador').value;
+                const archivo = fila.querySelector('.inp-excel').files[0];
+                const estadoDiv = fila.querySelector('.fila-estado');
+                const jug = jugadoresDisponibles.find(j => j.id_jugador == id_jugador);
+                const nombreJug = jug ? `${jug.nombre} ${jug.apellidos}` : `Jugador ${id_jugador}`;
+
+                progresoTexto.textContent = `Procesando: ${nombreJug}`;
+                progresoNum.textContent = `${procesados} / ${total}`;
+                progresoBarra.style.width = `${(procesados / total) * 100}%`;
+
+                estadoDiv.className = 'fila-estado mt-1 small text-muted';
+                estadoDiv.textContent = '⏳ Subiendo Excel...';
+                estadoDiv.classList.remove('d-none');
+
+                try {
+                    // Paso 1 — Subir el Excel de este jugador
+                    const formData = new FormData();
+                    formData.append('archivo', archivo);
+                    const resSubida = await fetch('../backend/subida.php', { method: 'POST', body: formData });
+                    const dataSubida = await resSubida.json();
+
+                    if (!dataSubida.ok) {
+                        estadoDiv.className = 'fila-estado mt-1 small text-danger';
+                        estadoDiv.textContent = `❌ Error al subir: ${dataSubida.error}`;
+                        resultados.push({ nombre: nombreJug, ok: false, error: dataSubida.error });
+                        procesados++;
+                        continue;
+                    }
+
+                    estadoDiv.textContent = '⏳ Calculando puntuaciones...';
+
+                    // Paso 2 — Llamar a la API de Python con el jugador y su Excel
+                    const resProcesar = await fetch('../backend/jugadores/procesar_jugador.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id_jugador, nombre_excel: dataSubida.nombre })
+                    });
+                    const dataProcesar = await resProcesar.json();
+
+                    if (dataProcesar.ok) {
+                        estadoDiv.className = 'fila-estado mt-1 small text-success';
+                        estadoDiv.textContent = `✅ ${dataProcesar.partidos_procesados} partido(s) procesado(s)`;
+                        resultados.push({ nombre: nombreJug, ok: true, partidos: dataProcesar.partidos_procesados });
+                    } else {
+                        estadoDiv.className = 'fila-estado mt-1 small text-danger';
+                        estadoDiv.textContent = `❌ ${dataProcesar.error}`;
+                        resultados.push({ nombre: nombreJug, ok: false, error: dataProcesar.error });
+                    }
+
+                } catch (e) {
+                    estadoDiv.className = 'fila-estado mt-1 small text-danger';
+                    estadoDiv.textContent = '❌ Error de conexión';
+                    resultados.push({ nombre: nombreJug, ok: false, error: 'Error de conexión' });
+                }
+
+                procesados++;
+            }
+
+            // Barra al 100%
+            progresoNum.textContent = `${total} / ${total}`;
+            progresoBarra.style.width = '100%';
+            progresoBarra.classList.remove('progress-bar-animated');
+
+            // Mensaje final
+            const exitosos = resultados.filter(r => r.ok).length;
+            const fallidos = resultados.filter(r => !r.ok).length;
+
+            if (fallidos === 0) {
+                mensaje.innerHTML = `<span class="text-success">✅ Todos los jugadores procesados correctamente.</span>`;
+            } else {
+                mensaje.innerHTML = `<span class="text-warning">⚠️ ${exitosos} correctos, ${fallidos} con error.</span>`;
+            }
+
+            // Tabla resumen de resultados
+            const filasTr = resultados.map(r => r.ok
+                ? `<tr>
+                    <td class="fw-semibold">${r.nombre}</td>
+                    <td class="text-center"><span class="badge bg-success">${r.partidos} partido(s)</span></td>
+                    <td class="text-center"><i class="bi bi-check-circle-fill text-success fs-5"></i></td>
+                   </tr>`
+                : `<tr>
+                    <td class="fw-semibold">${r.nombre}</td>
+                    <td class="text-danger small">${r.error}</td>
+                    <td class="text-center"><i class="bi bi-x-circle-fill text-danger fs-5"></i></td>
+                   </tr>`
+            ).join('');
+
+            document.getElementById('tabla-resultados').innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Jugador</th>
+                                <th>Resultado</th>
+                                <th class="text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>${filasTr}</tbody>
+                    </table>
+                </div>`;
+
+            document.getElementById('resultados').classList.remove('d-none');
+            btn.disabled = false;
+            btn.innerHTML = `<i class="bi bi-lightning-charge me-2"></i>Calcular Puntuaciones`;
+        }
+    </script>
+
+</body>
+
+</html>

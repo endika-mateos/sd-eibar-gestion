@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Jugadores - SD Eibar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --eibar-blue: #003366;
+            --eibar-red: #a20025;
+            --bg-light: #f4f6f9;
+        }
+
+        body { background-color: var(--bg-light); }
+
+        .navbar-eibar {
+            background-color: var(--eibar-blue) !important;
+            border-bottom: 4px solid var(--eibar-red);
+        }
+
+        .text-eibar-blue { color: var(--eibar-blue) !important; }
+
+        .btn-eibar-red { background-color: var(--eibar-red); color: white; border: none; }
+        .btn-eibar-red:hover { background-color: #82001c; color: white; }
+
+        /* Oculta los botones sensibles por defecto */
+        .btn-admin { display: none !important; }
+        body.is-admin .btn-admin { display: inline-block !important; }
+
+        /* Efectos interactivos para la tabla */
+        .table-hover tbody tr { transition: all 0.2s ease-in-out; }
+        .table-hover tbody tr:hover {
+            transform: scale(1.015);
+            box-shadow: 0 5px 15px rgba(0, 51, 102, 0.15);
+            background-color: #ffffff !important;
+            z-index: 1;
+            position: relative;
+        }
+
+        /* Badge de posicion con degradado corporativo */
+        .badge-posicion {
+            background: linear-gradient(135deg, var(--eibar-blue), #0055a4);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-eibar shadow">
+        <div class="container py-2">
+            <a class="navbar-brand d-flex align-items-center gap-3 fw-bold fs-4" href="dashboard.html">
+                <img src="../assets/sdeibarlogo.png" alt="Escudo SD Eibar" class="d-inline-block align-text-top"
+                    style="height: 60px; width: auto;"> Sistema SD Eibar
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
+                data-bs-target="#menuNavegacion">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="menuNavegacion">
+                <div class="navbar-nav ms-auto gap-3 align-items-center mt-3 mt-lg-0">
+                    <a href="dashboard.html" class="nav-link text-white opacity-75">Inicio</a>
+                    <a href="temporadas.html" class="nav-link text-white opacity-75">Temporadas</a>
+                    <a href="partidos.html" class="nav-link text-white opacity-75">Partidos</a>
+                    <a href="lesiones.html" class="nav-link text-white opacity-75">Lesiones</a>
+
+                    <div class="ms-lg-4 ps-lg-4 border-start border-secondary d-flex align-items-center gap-2">
+                        <span id="user-role-badge" class="badge bg-light text-dark d-none">Rol</span>
+                        <a href="login.html" id="btn-login"
+                            class="btn btn-warning btn-sm rounded-pill fw-bold text-dark px-4 shadow-sm">Iniciar Sesión</a>
+
+                        <!-- Dropdown con opciones -->
+                        <div id="btn-logout" class="dropdown d-none">
+                            <button class="btn btn-danger btn-sm rounded-pill fw-bold px-4 shadow-sm dropdown-toggle"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                Cerrar Sesión
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-1">
+                                <li>
+                                    <a class="dropdown-item py-2" href="excel.html">
+                                        <i class="bi bi-file-earmark-excel me-2 text-success"></i>Cargar Excel
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <button class="dropdown-item py-2" onclick="exportarCSV()">
+                                        <i class="bi bi-download me-2 text-primary"></i>Exportar CSV
+                                    </button>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <button class="dropdown-item py-2 text-danger" onclick="cerrarSesion()">
+                                        <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="card border-0 shadow-lg rounded-4">
+            <div class="card-body p-4 p-lg-5">
+
+                <div class="row g-3 align-items-center mb-4">
+                    <div class="col-12 col-lg-4">
+                        <h2 class="fw-bold mb-1 text-eibar-blue">Plantilla</h2>
+                    </div>
+                    <div class="col-12 col-lg-5">
+                        <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border border-secondary border-opacity-25">
+                            <span class="input-group-text bg-white border-0 text-eibar-blue">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" id="search" class="form-control border-0 ps-0 shadow-none"
+                                placeholder="Buscar jugador..." oninput="filtrarJugadores()">
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-3 text-lg-end">
+                        <button class="btn btn-eibar-red btn-lg px-4 rounded-pill shadow btn-admin fw-semibold"
+                            data-bs-toggle="modal" data-bs-target="#modalNuevo">
+                            <i class="bi bi-person-plus-fill me-2"></i>Añadir
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle text-center mb-0">
+                        <thead class="table-light border-bottom border-secondary">
+                            <tr>
+                                <th class="text-eibar-blue">Dorsal</th>
+                                <th class="text-eibar-blue">Nombre</th>
+                                <th class="text-eibar-blue">Apellidos</th>
+                                <th class="text-eibar-blue">Posición</th>
+                                <th class="text-eibar-blue">Estado</th>
+                                <th class="text-eibar-blue">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-jugadores"></tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Añadir Jugador -->
+    <div class="modal fade" id="modalNuevo" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Añadir Jugador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <input type="text" id="add-nombre" class="form-control form-control-lg rounded-3 mb-3" placeholder="Nombre">
+                    <input type="text" id="add-apellidos" class="form-control form-control-lg rounded-3 mb-3" placeholder="Apellidos">
+                    <input type="text" id="add-alias" class="form-control form-control-lg rounded-3 mb-3" placeholder="Alias (opcional)">
+                    <input type="text" id="add-posicion" class="form-control form-control-lg rounded-3 mb-3" placeholder="Posición (ej. POR, DFC)">
+                    <select id="add-estado" class="form-select form-select-lg rounded-3 mb-3">
+                        <option value="activo">Activo</option>
+                        <option value="lesionado">Lesionado</option>
+                        <option value="baja">Baja</option>
+                    </select>
+                    <div id="add-error" class="alert alert-danger py-2 d-none small"></div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-primary px-4 rounded-3" onclick="guardarNuevo()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Jugador -->
+    <div class="modal fade" id="modalEditar" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Editar Jugador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <input type="hidden" id="edit-id">
+                    <input type="text" id="edit-nombre" class="form-control form-control-lg rounded-3 mb-3" placeholder="Nombre">
+                    <input type="text" id="edit-apellidos" class="form-control form-control-lg rounded-3 mb-3" placeholder="Apellidos">
+                    <input type="text" id="edit-alias" class="form-control form-control-lg rounded-3 mb-3" placeholder="Alias (opcional)">
+                    <input type="text" id="edit-posicion" class="form-control form-control-lg rounded-3 mb-3" placeholder="Posición (ej. POR, DFC)">
+                    <select id="edit-estado" class="form-select form-select-lg rounded-3 mb-3">
+                        <option value="activo">Activo</option>
+                        <option value="lesionado">Lesionado</option>
+                        <option value="baja">Baja</option>
+                    </select>
+                    <div id="edit-error" class="alert alert-danger py-2 d-none small"></div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-primary px-4 rounded-3" onclick="guardarEditar()">Guardar cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Perfil del Jugador -->
+    <div class="modal fade" id="modalPerfil" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <div>
+                        <h5 class="modal-title fw-bold text-eibar-blue" id="perfilNombre">Perfil del Jugador</h5>
+                        <p class="text-muted small mb-0" id="perfilPosicion"></p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+
+                    <!-- Evolucion primero, Media Temporada segundo -->
+                    <ul class="nav nav-tabs mb-3" id="tabsPerfil">
+                        <li class="nav-item">
+                            <button class="nav-link active fw-semibold" id="tab-evolucion-btn"
+                                onclick="mostrarTab('evolucion')">📈 Evolución</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link fw-semibold" id="tab-radar-btn"
+                                onclick="mostrarTab('radar')">🕸️ Media Temporada</button>
+                        </li>
+                    </ul>
+
+                    <!-- Panel Evolucion (activo por defecto) -->
+                    <div id="panel-evolucion">
+                        <div id="evolucion-loading" class="text-center py-4">
+                            <div class="spinner-border text-secondary"></div>
+                        </div>
+                        <div id="evolucion-nodata" class="alert alert-secondary d-none">
+                            Sin puntuaciones registradas para este jugador.
+                        </div>
+                        <div id="evolucion-chart-wrap" class="d-none">
+                            <canvas id="chartEvolucion"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Panel Radar (oculto por defecto) -->
+                    <div id="panel-radar" class="d-none">
+                        <div id="radar-loading" class="text-center py-4">
+                            <div class="spinner-border text-secondary"></div>
+                        </div>
+                        <div id="radar-nodata" class="alert alert-secondary d-none">
+                            Sin puntuaciones registradas para este jugador.
+                        </div>
+                        <div id="radar-chart-wrap" class="d-none" style="max-width:420px; margin:auto;">
+                            <canvas id="chartRadar"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== HELPER PARA ESCAPAR COMILLAS EN onclick =====
+        // Evita que nombres con apostrofes (O'Connor, D'Angelo, etc.) rompan los botones.
+        function esc(s) { return String(s ?? '').replace(/'/g, "\\'"); }
+
+        // ===== SESION =====
+
+        // Al cargar sincronizamos estados de lesiones
+        fetch('../backend/lesiones/sincronizar_estados.php').catch(() => { });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('../backend/check_session.php')
+                .then(res => res.json())
+                .then(data => {
+                    const btnLogin  = document.getElementById('btn-login');
+                    const btnLogout = document.getElementById('btn-logout');
+                    const roleBadge = document.getElementById('user-role-badge');
+
+                    if (data.ok) {
+                        btnLogin.classList.add('d-none');
+                        btnLogout.classList.remove('d-none');
+                        roleBadge.textContent = data.rol.toUpperCase();
+                        roleBadge.classList.remove('d-none');
+                        if (data.rol === 'admin') document.body.classList.add('is-admin');
+                    } else {
+                        btnLogin.classList.remove('d-none');
+                        btnLogout.classList.add('d-none');
+                        document.body.classList.remove('is-admin');
+                    }
+                });
+        });
+
+        function cerrarSesion() {
+            fetch('../backend/logout.php')
+                .then(res => res.json())
+                .then(data => { if (data.ok) window.location.reload(); });
+        }
+
+        // ===== TABLA DE JUGADORES =====
+
+        fetch('../backend/jugadores/get_jugadores.php')
+            .then(r => r.json())
+            .then(d => { if (d.ok) listarJugadores(d.data); });
+
+        function listarJugadores(jugadores) {
+            const tbody = document.getElementById('lista-jugadores');
+            tbody.innerHTML = '';
+
+            jugadores.forEach(j => {
+                let badge;
+                if (j.estado === 'activo') {
+                    badge = '<span class="badge bg-success bg-opacity-75 text-white px-3 py-2 rounded-pill">Activo</span>';
+                } else if (j.estado === 'lesionado') {
+                    badge = '<span class="badge bg-danger bg-opacity-75 text-white px-3 py-2 rounded-pill">Lesionado</span>';
+                } else {
+                    badge = '<span class="badge bg-secondary px-3 py-2 rounded-pill">Baja</span>';
+                }
+
+                tbody.innerHTML += `
+                <tr class="align-middle border-bottom border-light">
+                    <td>
+                        <span class="badge rounded-circle fw-bold text-white d-inline-flex align-items-center justify-content-center"
+                            style="width:36px; height:36px; font-size:0.85rem; background-color:var(--eibar-blue);">
+                            ${j.dorsal ?? '-'}
+                        </span>
+                    </td>
+                    <td class="fw-bold text-dark fs-6">${j.nombre}</td>
+                    <td class="text-secondary fw-semibold">${j.apellidos}</td>
+                    <td><span class="badge badge-posicion px-3 py-2 rounded-pill fs-6">${j.posicion_habitual}</span></td>
+                    <td>${badge}</td>
+                    <td>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button class="btn btn-sm btn-outline-info rounded-pill px-3 fw-semibold"
+                                onclick="verPerfil(${j.id_jugador}, '${esc(j.nombre)} ${esc(j.apellidos)}', '${esc(j.posicion_habitual)}')">
+                                <i class="bi bi-person-vcard me-1"></i>Perfil
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning rounded-pill px-3 fw-semibold btn-admin"
+                                onclick="abrirEditar(${j.id_jugador}, '${esc(j.nombre)}', '${esc(j.apellidos)}', '${esc(j.alias)}', '${esc(j.posicion_habitual)}', '${j.estado}')">
+                                <i class="bi bi-pencil-square me-1"></i>Editar
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-semibold btn-admin"
+                                onclick="borrar(${j.id_jugador})">
+                                <i class="bi bi-trash3-fill me-1"></i>Borrar
+                            </button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        function filtrarJugadores() {
+            const busqueda = document.getElementById('search').value;
+            fetch(`../backend/jugadores/get_jugadores.php?query=${encodeURIComponent(busqueda)}`)
+                .then(r => r.json())
+                .then(d => { if (d.ok) listarJugadores(d.data); });
+        }
+
+        // ===== CRUD JUGADORES =====
+
+        function mostrarErrorModal(idElemento, mensaje) {
+            const el = document.getElementById(idElemento);
+            if (!el) return;
+            el.textContent = '⚠️ ' + mensaje;
+            el.classList.remove('d-none');
+            setTimeout(() => el.classList.add('d-none'), 4000);
+        }
+
+        function guardarNuevo() {
+            const nombre    = document.getElementById('add-nombre').value.trim();
+            const apellidos = document.getElementById('add-apellidos').value.trim();
+            const posicion  = document.getElementById('add-posicion').value.trim();
+
+            if (!nombre || !apellidos) { mostrarErrorModal('add-error', 'Nombre y apellidos son obligatorios.'); return; }
+            if (!posicion) { mostrarErrorModal('add-error', 'La posición es obligatoria (ej. POR, DFC).'); return; }
+
+            const datos = {
+                nombre, apellidos,
+                alias:            document.getElementById('add-alias').value.trim(),
+                posicion_habitual: posicion,
+                estado:           document.getElementById('add-estado').value
+            };
+
+            fetch('../backend/jugadores/add_jugador.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.ok) window.location.reload();
+                else mostrarErrorModal('add-error', res.error);
+            });
+        }
+
+        function abrirEditar(id, nombre, apellidos, alias, posicion, estado) {
+            document.getElementById('edit-id').value        = id;
+            document.getElementById('edit-nombre').value    = nombre;
+            document.getElementById('edit-apellidos').value = apellidos;
+            document.getElementById('edit-alias').value     = alias;
+            document.getElementById('edit-posicion').value  = posicion;
+            document.getElementById('edit-estado').value    = estado;
+            new bootstrap.Modal(document.getElementById('modalEditar')).show();
+        }
+
+        function guardarEditar() {
+            const nombre    = document.getElementById('edit-nombre').value.trim();
+            const apellidos = document.getElementById('edit-apellidos').value.trim();
+            const posicion  = document.getElementById('edit-posicion').value.trim();
+
+            if (!nombre || !apellidos) { mostrarErrorModal('edit-error', 'Nombre y apellidos son obligatorios.'); return; }
+            if (!posicion) { mostrarErrorModal('edit-error', 'La posición es obligatoria (ej. POR, DFC).'); return; }
+
+            const datos = {
+                id_jugador:       document.getElementById('edit-id').value,
+                nombre, apellidos,
+                alias:            document.getElementById('edit-alias').value.trim(),
+                posicion_habitual: posicion,
+                estado:           document.getElementById('edit-estado').value
+            };
+
+            fetch('../backend/jugadores/update_jugador.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.ok) window.location.reload();
+                else mostrarErrorModal('edit-error', res.error);
+            });
+        }
+
+        function borrar(id) {
+            if (!confirm('¿Seguro que quieres eliminar este jugador?')) return;
+            fetch('../backend/jugadores/delete_jugador.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_jugador: id })
+            })
+            .then(r => r.json())
+            .then(d => { if (d.ok) window.location.reload(); });
+        }
+
+        // ===== EXPORTAR CSV =====
+
+        function exportarCSV() {
+            fetch('../backend/jugadores/get_jugadores.php')
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.ok || data.data.length === 0) { alert('No hay datos para exportar.'); return; }
+                    const cabecera = ['ID', 'Nombre', 'Apellidos', 'Alias', 'Posicion', 'Estado'];
+                    const filas    = data.data.map(j => [j.id_jugador, j.nombre, j.apellidos, j.alias ?? '', j.posicion_habitual, j.estado]);
+                    descargarCSV('jugadores.csv', cabecera, filas);
+                });
+        }
+
+        function descargarCSV(nombreArchivo, cabecera, filas) {
+            const escapar = val => {
+                const str = String(val ?? '');
+                return str.includes(',') || str.includes('"') || str.includes('\n') ? `"${str.replace(/"/g, '""')}"` : str;
+            };
+            const contenido = [cabecera, ...filas].map(fila => fila.map(escapar).join(',')).join('\n');
+            const blob = new Blob(['\uFEFF' + contenido], { type: 'text/csv;charset=utf-8;' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href = url; a.download = nombreArchivo; a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ===== PERFIL DEL JUGADOR =====
+
+        let radarChart     = null;
+        let evolucionChart = null;
+        let perfilIdActual = null;
+
+        function verPerfil(id, nombre, posicion) {
+            document.getElementById('perfilNombre').textContent   = nombre;
+            document.getElementById('perfilPosicion').textContent = posicion || '';
+
+            // Evolucion es la pestaña por defecto
+            mostrarTab('evolucion');
+
+            if (perfilIdActual === id) {
+                new bootstrap.Modal(document.getElementById('modalPerfil')).show();
+                return;
+            }
+            perfilIdActual = id;
+
+            if (radarChart)     { radarChart.destroy();     radarChart = null; }
+            if (evolucionChart) { evolucionChart.destroy(); evolucionChart = null; }
+
+            mostrarEstado('radar', 'loading');
+            mostrarEstado('evolucion', 'loading');
+
+            // ===== GRAFICO DE EVOLUCION =====
+            // Solo muestra la Nota Final partido a partido
+            fetch(`../backend/jugadores/get_evolucion.php?id_jugador=${id}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.ok || data.data.length === 0) {
+                        mostrarEstado('evolucion', 'nodata');
+                        return;
+                    }
+
+                    const etiquetas = data.data.map(d => `${d.rival}\n${d.fecha}`);
+                    const finales   = data.data.map(d => d.puntuacion_final);
+
+                    mostrarEstado('evolucion', 'chart');
+                    const ctx = document.getElementById('chartEvolucion').getContext('2d');
+                    evolucionChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: etiquetas,
+                            datasets: [{
+                                label: 'Nota Final',
+                                data: finales,
+                                borderColor: '#003366',
+                                backgroundColor: 'rgba(0,51,102,0.1)',
+                                borderWidth: 3,
+                                pointRadius: 5,
+                                pointBackgroundColor: '#003366',
+                                tension: 0.3,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    min: 0, max: 10,
+                                    ticks: { stepSize: 1 },
+                                    title: { display: true, text: 'Puntuación' }
+                                },
+                                x: { ticks: { maxRotation: 45 } }
+                            },
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        title: (items) => {
+                                            const d = data.data[items[0].dataIndex];
+                                            return `${d.rival} (${d.localidad}) · ${d.fecha}`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    // Reutilizamos los datos para el radar de medias
+                    cargarRadarMedias(data.data);
+                })
+                .catch(() => {
+                    mostrarEstado('evolucion', 'nodata');
+                    mostrarEstado('radar', 'nodata');
+                });
+
+            new bootstrap.Modal(document.getElementById('modalPerfil')).show();
+        }
+
+        // ===== RADAR CON MEDIAS DE TEMPORADA =====
+        // Calcula la media de ataque, construccion y defensa de todos los partidos
+
+        function cargarRadarMedias(partidos) {
+            if (!partidos || partidos.length === 0) {
+                mostrarEstado('radar', 'nodata');
+                return;
+            }
+
+            const total             = partidos.length;
+            const mediaAtaque       = partidos.reduce((s, d) => s + d.puntuacion_ataque, 0) / total;
+            const mediaConstruccion = partidos.reduce((s, d) => s + d.puntuacion_construccion, 0) / total;
+            const mediaDefensa      = partidos.reduce((s, d) => s + d.puntuacion_defensa, 0) / total;
+
+            mostrarEstado('radar', 'chart');
+            const ctx = document.getElementById('chartRadar').getContext('2d');
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Ataque', 'Construcción', 'Defensa'],
+                    datasets: [{
+                        label: `Media temporada (${total} partidos)`,
+                        data: [
+                            parseFloat(mediaAtaque.toFixed(2)),
+                            parseFloat(mediaConstruccion.toFixed(2)),
+                            parseFloat(mediaDefensa.toFixed(2))
+                        ],
+                        backgroundColor: 'rgba(0, 51, 102, 0.2)',
+                        borderColor: '#003366',
+                        pointBackgroundColor: '#a20025',
+                        pointRadius: 5,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: { min: 0, max: 10, ticks: { stepSize: 2 } }
+                    },
+                    plugins: {
+                        legend: { display: true, position: 'top' }
+                    }
+                }
+            });
+        }
+
+        // Cambia entre la pestaña Evolucion y Media Temporada
+        function mostrarTab(tab) {
+            document.getElementById('panel-radar').classList.toggle('d-none',      tab !== 'radar');
+            document.getElementById('panel-evolucion').classList.toggle('d-none',  tab !== 'evolucion');
+            document.getElementById('tab-radar-btn').classList.toggle('active',    tab === 'radar');
+            document.getElementById('tab-evolucion-btn').classList.toggle('active', tab === 'evolucion');
+        }
+
+        // Muestra loading / sin datos / grafico segun el estado
+        function mostrarEstado(panel, estado) {
+            document.getElementById(`${panel}-loading`).classList.toggle('d-none', estado !== 'loading');
+            document.getElementById(`${panel}-nodata`).classList.toggle('d-none',  estado !== 'nodata');
+            const wrap = document.getElementById(`${panel}-chart-wrap`);
+            if (wrap) wrap.classList.toggle('d-none', estado !== 'chart');
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Lesiones - SD Eibar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        :root {
+            --eibar-blue: #003366;
+            --eibar-red: #a20025;
+        }
+
+        .navbar-eibar {
+            background-color: var(--eibar-blue) !important;
+            border-bottom: 4px solid var(--eibar-red);
+        }
+
+        .text-eibar-blue {
+            color: var(--eibar-blue) !important;
+        }
+
+        .btn-eibar-red {
+            background-color: var(--eibar-red);
+            color: white;
+            border: none;
+        }
+
+        .btn-eibar-red:hover {
+            background-color: #82001c;
+            color: white;
+        }
+
+        /* Efectos interactivos para la tabla */
+        .table-hover tbody tr {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .table-hover tbody tr:hover {
+            transform: scale(1.015);
+            box-shadow: 0 5px 15px rgba(0, 51, 102, 0.15);
+            background-color: #ffffff !important;
+            z-index: 1;
+            position: relative;
+        }
+
+        /* Oculta los botones sensibles por defecto */
+        .btn-admin {
+            display: none !important;
+        }
+
+        /* Solo los muestra si el body tiene la clase is-admin */
+        body.is-admin .btn-admin {
+            display: inline-block !important;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-eibar shadow">
+        <div class="container py-2">
+            <a class="navbar-brand d-flex align-items-center gap-3 fw-bold fs-4" href="dashboard.html">
+                <img src="../assets/sdeibarlogo.png" alt="Escudo SD Eibar" class="d-inline-block align-text-top"
+                    style="height: 60px; width: auto;"> Sistema SD Eibar
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
+                data-bs-target="#menuNavegacion">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="menuNavegacion">
+                <div class="navbar-nav ms-auto gap-3 align-items-center mt-3 mt-lg-0">
+                    <a href="dashboard.html" class="nav-link text-white opacity-75">Inicio</a>
+                    <a href="jugadores.html" class="nav-link text-white opacity-75">Jugadores</a>
+                    <a href="temporadas.html" class="nav-link text-white opacity-75">Temporadas</a>
+                    <a href="partidos.html" class="nav-link text-white opacity-75">Partidos</a>
+
+                    <div class="ms-lg-4 ps-lg-4 border-start border-secondary d-flex align-items-center gap-2">
+                        <span id="user-role-badge" class="badge bg-light text-dark d-none">Rol</span>
+                        <a href="login.html" id="btn-login"
+                            class="btn btn-warning btn-sm rounded-pill fw-bold text-dark px-4 shadow-sm">Iniciar Sesión</a>
+                        <button id="btn-logout" class="btn btn-danger btn-sm rounded-pill fw-bold d-none px-4 shadow-sm"
+                            onclick="cerrarSesion()">Cerrar Sesión</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="card border-0 shadow-lg rounded-4">
+            <div class="card-body p-4">
+
+                <div class="row g-3 align-items-center mb-4">
+                    <div class="col-12 col-lg-4">
+                        <h2 class="fw-bold mb-1 text-eibar-blue">Lesiones</h2>
+                        <p class="text-muted mb-0">Gestión médica y estado físico</p>
+                    </div>
+                    <div class="col-12 col-lg-5">
+                        <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border border-secondary border-opacity-25">
+                            <span class="input-group-text bg-white border-0 text-eibar-blue">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" id="search" class="form-control border-0 ps-0 shadow-none"
+                                placeholder="Buscar lesión..." oninput="filtrarLesiones()">
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-3 text-lg-end">
+                        <button class="btn btn-eibar-red btn-lg px-4 rounded-pill shadow btn-admin fw-semibold"
+                            data-bs-toggle="modal" data-bs-target="#modalNuevo">
+                            <i class="bi bi-bandaid me-2"></i>Añadir
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle text-center mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Jugador</th>
+                                <th>Fecha Inicio</th>
+                                <th>Fecha Fin</th>
+                                <th>Tipo de Lesión</th>
+                                <th>Gravedad</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpo-tabla"></tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Añadir Lesion -->
+    <div class="modal fade" id="modalNuevo" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Añadir Lesión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <select id="add-jugador" class="form-select form-select-lg rounded-3 mb-3" required>
+                        <option value="">Selecciona un jugador</option>
+                    </select>
+                    <input type="date" id="add-fecha-inicio" class="form-control form-control-lg rounded-3 mb-3" required>
+                    <input type="date" id="add-fecha-fin" class="form-control form-control-lg rounded-3 mb-3">
+                    <input type="text" id="add-tipo-lesion" class="form-control form-control-lg rounded-3 mb-3"
+                        placeholder="Tipo de lesión" required>
+                    <select id="add-gravedad" class="form-select form-select-lg rounded-3 mb-3" required>
+                        <option value="leve">Leve</option>
+                        <option value="moderada">Moderada</option>
+                        <option value="grave">Grave</option>
+                    </select>
+                    <input type="date" id="add-fecha-prevista" class="form-control form-control-lg rounded-3 mb-3">
+                    <textarea id="add-observaciones" class="form-control rounded-3 mb-3"
+                        placeholder="Observaciones" rows="3"></textarea>
+                    <div id="add-error" class="alert alert-danger py-2 d-none small"></div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-primary px-4 rounded-3" onclick="guardarNuevo()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Lesion -->
+    <div class="modal fade" id="modalEditar" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Editar Lesión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <input type="hidden" id="edit-id">
+                    <select id="edit-jugador" class="form-select form-select-lg rounded-3 mb-3" required>
+                        <option value="">Selecciona un jugador</option>
+                    </select>
+                    <input type="date" id="edit-fecha-inicio" class="form-control form-control-lg rounded-3 mb-3" required>
+                    <input type="date" id="edit-fecha-fin" class="form-control form-control-lg rounded-3 mb-3">
+                    <input type="text" id="edit-tipo-lesion" class="form-control form-control-lg rounded-3 mb-3"
+                        placeholder="Tipo de lesión" required>
+                    <select id="edit-gravedad" class="form-select form-select-lg rounded-3 mb-3" required>
+                        <option value="leve">Leve</option>
+                        <option value="moderada">Moderada</option>
+                        <option value="grave">Grave</option>
+                    </select>
+                    <input type="date" id="edit-fecha-prevista" class="form-control form-control-lg rounded-3 mb-3">
+                    <textarea id="edit-observaciones" class="form-control rounded-3 mb-3"
+                        placeholder="Observaciones" rows="3"></textarea>
+                    <div id="edit-error" class="alert alert-danger py-2 d-none small"></div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-primary px-4 rounded-3" onclick="guardarEditar()">Guardar cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== SESION =====
+
+        // Al cargar sincronizamos los estados de lesiones automaticamente
+        fetch('../backend/lesiones/sincronizar_estados.php').catch(() => { });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('../backend/check_session.php')
+                .then(res => res.json())
+                .then(data => {
+                    const btnLogin  = document.getElementById('btn-login');
+                    const btnLogout = document.getElementById('btn-logout');
+                    const roleBadge = document.getElementById('user-role-badge');
+
+                    if (data.ok) {
+                        btnLogin.classList.add('d-none');
+                        btnLogout.classList.remove('d-none');
+                        roleBadge.textContent = data.rol.toUpperCase();
+                        roleBadge.classList.remove('d-none');
+                        if (data.rol === 'admin') document.body.classList.add('is-admin');
+                    } else {
+                        btnLogin.classList.remove('d-none');
+                        btnLogout.classList.add('d-none');
+                        document.body.classList.remove('is-admin');
+                    }
+                });
+        });
+
+        function cerrarSesion() {
+            fetch('../backend/logout.php')
+                .then(res => res.json())
+                .then(data => { if (data.ok) window.location.reload(); });
+        }
+
+        // ===== TABLA DE LESIONES =====
+
+        fetch('../backend/lesiones/get_lesiones.php')
+            .then(r => r.json())
+            .then(datos => {
+                if (!datos.ok) { alert('Error al cargar lesiones: ' + datos.error); return; }
+
+                const tbody = document.getElementById('cuerpo-tabla');
+                tbody.innerHTML = '';
+
+                datos.data.forEach(l => {
+                    const colorGravedad = l.gravedad === 'leve' ? 'success' : (l.gravedad === 'moderada' ? 'warning text-dark' : 'danger');
+
+                    tbody.innerHTML += `
+                    <tr class="align-middle border-bottom border-light">
+                        <td class="fw-bold text-dark"><i class="bi bi-person-fill text-eibar-blue me-2"></i>${l.nombre} ${l.apellidos}</td>
+                        <td class="text-secondary fw-semibold"><i class="bi bi-calendar2-minus me-1"></i>${l.fecha_inicio}</td>
+                        <td class="text-secondary fw-semibold">${l.fecha_fin ? '<i class="bi bi-calendar2-check me-1"></i>' + l.fecha_fin : '-'}</td>
+                        <td><span class="badge bg-light text-dark border px-2 py-1">${l.tipo_lesion}</span></td>
+                        <td><span class="badge bg-${colorGravedad} bg-opacity-75 rounded-pill px-3 py-2">${l.gravedad.toUpperCase()}</span></td>
+                        <td>
+                            <div class="d-flex justify-content-center gap-2">
+                                <button class="btn btn-sm btn-outline-warning rounded-pill px-3 fw-semibold btn-admin"
+                                    onclick="abrirEditar(${l.id_lesion}, ${l.id_jugador}, '${l.fecha_inicio}', '${l.fecha_fin ?? ''}', '${(l.tipo_lesion ?? '').replace(/'/g, "\\'")}', '${l.gravedad}', '${l.fecha_prevista_retorno ?? ''}', '${(l.observaciones ?? '').replace(/'/g, "\\'")}')">
+                                    <i class="bi bi-pencil-square me-1"></i>Editar
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-semibold btn-admin"
+                                    onclick="borrarLesion(${l.id_lesion})">
+                                    <i class="bi bi-trash3-fill me-1"></i>Borrar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>`;
+                });
+            });
+
+        function filtrarLesiones() {
+            const q = document.getElementById('search').value.toLowerCase();
+            document.querySelectorAll('#cuerpo-tabla tr').forEach(tr => {
+                tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+
+        // ===== CRUD LESIONES =====
+
+        function mostrarErrorModal(idElemento, mensaje) {
+            const el = document.getElementById(idElemento);
+            if (!el) return;
+            el.textContent = '⚠️ ' + mensaje;
+            el.classList.remove('d-none');
+            setTimeout(() => el.classList.add('d-none'), 4000);
+        }
+
+        function guardarNuevo() {
+            const jugador     = document.getElementById('add-jugador').value;
+            const fechaInicio = document.getElementById('add-fecha-inicio').value;
+            const fechaFin    = document.getElementById('add-fecha-fin').value;
+            const fechaPrev   = document.getElementById('add-fecha-prevista').value;
+            const tipo        = document.getElementById('add-tipo-lesion').value.trim();
+
+            if (!jugador)     { mostrarErrorModal('add-error', 'Selecciona un jugador.'); return; }
+            if (!fechaInicio) { mostrarErrorModal('add-error', 'La fecha de inicio es obligatoria.'); return; }
+            if (!tipo)        { mostrarErrorModal('add-error', 'El tipo de lesión es obligatorio.'); return; }
+            if (fechaFin  && fechaFin  < fechaInicio) { mostrarErrorModal('add-error', 'La fecha de fin no puede ser anterior a la de inicio.'); return; }
+            if (fechaPrev && fechaPrev < fechaInicio) { mostrarErrorModal('add-error', 'La fecha prevista de retorno no puede ser anterior a la de inicio.'); return; }
+
+            const datos = {
+                id_jugador:             jugador,
+                fecha_inicio:           fechaInicio,
+                fecha_fin:              fechaFin || null,
+                tipo_lesion:            tipo,
+                gravedad:               document.getElementById('add-gravedad').value,
+                fecha_prevista_retorno: fechaPrev || null,
+                observaciones:          document.getElementById('add-observaciones').value.trim()
+            };
+
+            fetch('../backend/lesiones/add_lesion.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.ok) { window.location.reload(); }
+                else { mostrarErrorModal('add-error', res.error); }
+            });
+        }
+
+        function abrirEditar(id_lesion, id_jugador, fecha_inicio, fecha_fin, tipo_lesion, gravedad, fecha_prevista_retorno, observaciones) {
+            document.getElementById('edit-id').value              = id_lesion;
+            document.getElementById('edit-jugador').value         = id_jugador;
+            document.getElementById('edit-fecha-inicio').value    = fecha_inicio;
+            document.getElementById('edit-fecha-fin').value       = fecha_fin;
+            document.getElementById('edit-tipo-lesion').value     = tipo_lesion;
+            document.getElementById('edit-gravedad').value        = gravedad;
+            document.getElementById('edit-fecha-prevista').value  = fecha_prevista_retorno;
+            document.getElementById('edit-observaciones').value   = observaciones;
+            new bootstrap.Modal(document.getElementById('modalEditar')).show();
+        }
+
+        function guardarEditar() {
+            const fechaInicio = document.getElementById('edit-fecha-inicio').value;
+            const fechaFin    = document.getElementById('edit-fecha-fin').value;
+            const fechaPrev   = document.getElementById('edit-fecha-prevista').value;
+            const tipo        = document.getElementById('edit-tipo-lesion').value.trim();
+
+            if (!fechaInicio) { mostrarErrorModal('edit-error', 'La fecha de inicio es obligatoria.'); return; }
+            if (!tipo)        { mostrarErrorModal('edit-error', 'El tipo de lesión es obligatorio.'); return; }
+            if (fechaFin  && fechaFin  < fechaInicio) { mostrarErrorModal('edit-error', 'La fecha de fin no puede ser anterior a la de inicio.'); return; }
+            if (fechaPrev && fechaPrev < fechaInicio) { mostrarErrorModal('edit-error', 'La fecha prevista de retorno no puede ser anterior a la de inicio.'); return; }
+
+            const datos = {
+                id_lesion:              document.getElementById('edit-id').value,
+                id_jugador:             document.getElementById('edit-jugador').value,
+                fecha_inicio:           fechaInicio,
+                fecha_fin:              fechaFin || null,
+                tipo_lesion:            tipo,
+                gravedad:               document.getElementById('edit-gravedad').value,
+                fecha_prevista_retorno: fechaPrev || null,
+                observaciones:          document.getElementById('edit-observaciones').value.trim()
+            };
+
+            fetch('../backend/lesiones/update_lesion.php', {
+                method: 'POST',
+                body: JSON.stringify(datos)
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.ok) { window.location.reload(); }
+                else { mostrarErrorModal('edit-error', res.error); }
+            });
+        }
+
+        function borrarLesion(id) {
+            if (!confirm('¿Seguro que quieres eliminar esta lesión?')) return;
+
+            fetch('../backend/lesiones/delete_lesion.php', {
+                method: 'POST',
+                body: JSON.stringify({ id_lesion: id })
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.ok) { window.location.reload(); }
+                else { alert('Error al borrar: ' + d.error); }
+            });
+        }
+
+        // Carga el selector de jugadores para los modales
+        fetch('../backend/jugadores/get_jugadores.php')
+            .then(r => r.json())
+            .then(datos => {
+                if (!datos.ok) return;
+                const selAdd  = document.getElementById('add-jugador');
+                const selEdit = document.getElementById('edit-jugador');
+                datos.data.forEach(j => {
+                    const opt = `<option value="${j.id_jugador}">${j.nombre} ${j.apellidos}</option>`;
+                    selAdd.innerHTML  += opt;
+                    selEdit.innerHTML += opt;
+                });
+            });
+    </script>
+
+</body>
+
+</html>

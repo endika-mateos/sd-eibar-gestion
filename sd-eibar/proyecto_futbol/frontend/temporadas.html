@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Temporadas - SD Eibar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        :root {
+            --eibar-blue: #003366;
+            --eibar-red: #a20025;
+        }
+
+        .navbar-eibar {
+            background-color: var(--eibar-blue) !important;
+            border-bottom: 4px solid var(--eibar-red);
+        }
+
+        .text-eibar-blue {
+            color: var(--eibar-blue) !important;
+        }
+
+        .btn-eibar-red {
+            background-color: var(--eibar-red);
+            color: white;
+            border: none;
+        }
+
+        .btn-eibar-red:hover {
+            background-color: #82001c;
+            color: white;
+        }
+
+        /* Efectos interactivos para la tabla */
+        .table-hover tbody tr {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .table-hover tbody tr:hover {
+            transform: scale(1.015);
+            box-shadow: 0 5px 15px rgba(0, 51, 102, 0.15);
+            background-color: #ffffff !important;
+            z-index: 1;
+            position: relative;
+        }
+
+        /* Oculta los botones sensibles por defecto */
+        .btn-admin {
+            display: none !important;
+        }
+
+        /* Solo los muestra si el body tiene la clase is-admin */
+        body.is-admin .btn-admin {
+            display: inline-block !important;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-eibar shadow">
+        <div class="container py-2">
+            <a class="navbar-brand d-flex align-items-center gap-3 fw-bold fs-4" href="dashboard.html">
+                <img src="../assets/sdeibarlogo.png" alt="Escudo SD Eibar" class="d-inline-block align-text-top"
+                    style="height: 60px; width: auto;"> Sistema SD Eibar
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
+                data-bs-target="#menuNavegacion">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="menuNavegacion">
+                <div class="navbar-nav ms-auto gap-3 align-items-center mt-3 mt-lg-0">
+                    <a href="dashboard.html" class="nav-link text-white opacity-75">Inicio</a>
+                    <a href="jugadores.html" class="nav-link text-white opacity-75">Jugadores</a>
+                    <a href="partidos.html" class="nav-link text-white opacity-75">Partidos</a>
+                    <a href="lesiones.html" class="nav-link text-white opacity-75">Lesiones</a>
+
+                    <div class="ms-lg-4 ps-lg-4 border-start border-secondary d-flex align-items-center gap-2">
+                        <span id="user-role-badge" class="badge bg-light text-dark d-none">Rol</span>
+                        <a href="login.html" id="btn-login"
+                            class="btn btn-warning btn-sm rounded-pill fw-bold text-dark px-4 shadow-sm">Iniciar
+                            Sesión</a>
+                        <button id="btn-logout" class="btn btn-danger btn-sm rounded-pill fw-bold d-none px-4 shadow-sm"
+                            onclick="cerrarSesion()">Cerrar Sesión</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="card border-0 shadow-lg rounded-4">
+            <div class="card-body p-4">
+
+                <div class="row g-3 align-items-center mb-4">
+                    <div class="col-12 col-lg-4">
+                        <h2 class="fw-bold mb-1 text-eibar-blue">Temporadas</h2>
+                        <p class="text-muted mb-0">Gestión de las temporadas registradas</p>
+                    </div>
+                    <div class="col-12 col-lg-5">
+                        <div
+                            class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border border-secondary border-opacity-25">
+                            <span class="input-group-text bg-white border-0 text-eibar-blue">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" id="search" class="form-control border-0 ps-0 shadow-none"
+                                placeholder="Buscar temporada..." oninput="filtrarTemporadas()">
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-3 text-lg-end">
+                        <button class="btn btn-eibar-red btn-lg px-4 rounded-pill shadow btn-admin fw-semibold"
+                            data-bs-toggle="modal" data-bs-target="#modalNuevo">
+                            <i class="bi bi-calendar-plus me-2"></i>Añadir
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle text-center mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Fecha Inicio</th>
+                                <th>Fecha Fin</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-temporadas"></tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Añadir Temporada -->
+    <div class="modal fade" id="modalNuevo" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Añadir Temporada</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <input type="text" id="add-nombre" class="form-control form-control-lg rounded-3 mb-3"
+                        placeholder="Nombre de la temporada" required>
+                    <input type="date" id="add-fecha-inicio" class="form-control form-control-lg rounded-3 mb-3"
+                        required>
+                    <input type="date" id="add-fecha-fin" class="form-control form-control-lg rounded-3 mb-3" required>
+
+                    <!-- Checkbox: marcar esta temporada como activa -->
+                    <div class="form-check mb-3 ps-4">
+                        <input class="form-check-input" type="checkbox" id="add-activa">
+                        <label class="form-check-label fw-semibold" for="add-activa">
+                            Marcar como temporada activa
+                            <i class="bi bi-info-circle ms-1 text-muted"
+                                title="Solo puede haber una temporada activa al mismo tiempo. Si activas esta, las demás se desactivarán."></i>
+                        </label>
+                    </div>
+
+                    <div id="add-error" class="alert alert-danger py-2 d-none small"></div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-primary px-4 rounded-3"
+                        onclick="guardarNuevo()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Temporada -->
+    <div class="modal fade" id="modalEditar" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Editar Temporada</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <input type="hidden" id="edit-id">
+                    <input type="text" id="edit-nombre" class="form-control form-control-lg rounded-3 mb-3"
+                        placeholder="Nombre de la temporada" required>
+                    <input type="date" id="edit-fecha-inicio" class="form-control form-control-lg rounded-3 mb-3"
+                        required>
+                    <input type="date" id="edit-fecha-fin" class="form-control form-control-lg rounded-3 mb-3" required>
+
+                    <!-- Checkbox: marcar esta temporada como activa -->
+                    <div class="form-check mb-3 ps-4">
+                        <input class="form-check-input" type="checkbox" id="edit-activa">
+                        <label class="form-check-label fw-semibold" for="edit-activa">
+                            Marcar como temporada activa
+                            <i class="bi bi-info-circle ms-1 text-muted"
+                                title="Solo puede haber una temporada activa al mismo tiempo. Si activas esta, las demás se desactivarán."></i>
+                        </label>
+                    </div>
+
+                    <div id="edit-error" class="alert alert-danger py-2 d-none small"></div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-primary px-4 rounded-3" onclick="guardarEditar()">Guardar
+                        cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== HELPER PARA ESCAPAR COMILLAS EN onclick =====
+        // Evita que nombres con apostrofes (O'Higgins, "Mister X's", etc.) rompan los handlers.
+        function esc(s) { return String(s ?? '').replace(/'/g, "\\'"); }
+
+        // ===== SESION =====
+
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('../backend/check_session.php')
+                .then(res => res.json())
+                .then(data => {
+                    const btnLogin = document.getElementById('btn-login');
+                    const btnLogout = document.getElementById('btn-logout');
+                    const roleBadge = document.getElementById('user-role-badge');
+
+                    if (data.ok) {
+                        btnLogin.classList.add('d-none');
+                        btnLogout.classList.remove('d-none');
+                        roleBadge.textContent = data.rol.toUpperCase();
+                        roleBadge.classList.remove('d-none');
+                        if (data.rol === 'admin') document.body.classList.add('is-admin');
+                    } else {
+                        btnLogin.classList.remove('d-none');
+                        btnLogout.classList.add('d-none');
+                        document.body.classList.remove('is-admin');
+                    }
+                });
+        });
+
+        function cerrarSesion() {
+            fetch('../backend/logout.php')
+                .then(res => res.json())
+                .then(data => { if (data.ok) window.location.reload(); });
+        }
+
+        // ===== TABLA DE TEMPORADAS =====
+
+        fetch('../backend/temporadas/get_temporadas.php')
+            .then(r => r.json())
+            .then(datos => { if (datos.ok) listarTemporadas(datos.data); });
+
+        function listarTemporadas(temporadas) {
+            const tbody = document.getElementById('lista-temporadas');
+            tbody.innerHTML = '';
+
+            temporadas.forEach(t => {
+                // Badge segun si la temporada esta activa o no
+                const estadoBadge = parseInt(t.activa) === 1
+                    ? '<span class="badge bg-success bg-opacity-75 text-white px-3 py-2 rounded-pill"><i class="bi bi-check-circle me-1"></i>Activa</span>'
+                    : '<span class="badge bg-secondary bg-opacity-50 text-white px-3 py-2 rounded-pill">Inactiva</span>';
+
+                tbody.innerHTML += `
+                <tr class="align-middle border-bottom border-light">
+                    <td class="fw-bold text-dark fs-6"><i class="bi bi-calendar3 me-2 text-eibar-blue"></i>${t.nombre}</td>
+                    <td class="text-secondary fw-semibold">${t.fecha_inicio}</td>
+                    <td class="text-secondary fw-semibold">${t.fecha_fin}</td>
+                    <td>${estadoBadge}</td>
+                    <td>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button class="btn btn-sm btn-outline-warning rounded-pill px-3 fw-semibold btn-admin"
+                                onclick="abrirEditar(${t.id_temporada}, '${esc(t.nombre)}', '${t.fecha_inicio}', '${t.fecha_fin}', ${parseInt(t.activa) === 1 ? 1 : 0})">
+                                <i class="bi bi-pencil-square me-1"></i>Editar
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-semibold btn-admin"
+                                onclick="borrar(${t.id_temporada})">
+                                <i class="bi bi-trash3-fill me-1"></i>Borrar
+                            </button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        function filtrarTemporadas() {
+            const busqueda = document.getElementById('search').value;
+            fetch(`../backend/temporadas/get_temporadas.php?query=${busqueda}`)
+                .then(r => r.json())
+                .then(datos => { if (datos.ok) listarTemporadas(datos.data); });
+        }
+
+        // ===== CRUD TEMPORADAS =====
+
+        function mostrarErrorModal(idElemento, mensaje) {
+            const el = document.getElementById(idElemento);
+            if (!el) return;
+            el.textContent = '⚠️ ' + mensaje;
+            el.classList.remove('d-none');
+            setTimeout(() => el.classList.add('d-none'), 4000);
+        }
+
+        function guardarNuevo() {
+            const nombre = document.getElementById('add-nombre').value.trim();
+            const fechaInicio = document.getElementById('add-fecha-inicio').value;
+            const fechaFin = document.getElementById('add-fecha-fin').value;
+            const activa = document.getElementById('add-activa').checked ? 1 : 0;
+
+            if (!nombre) { mostrarErrorModal('add-error', 'El nombre de la temporada es obligatorio.'); return; }
+            if (fechaInicio && fechaFin && fechaFin < fechaInicio) {
+                mostrarErrorModal('add-error', 'La fecha de fin no puede ser anterior a la de inicio.');
+                return;
+            }
+
+            const datos = { nombre, fecha_inicio: fechaInicio, fecha_fin: fechaFin, activa };
+
+            fetch('../backend/temporadas/add_temporada.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
+            })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.ok) { window.location.reload(); }
+                    else { mostrarErrorModal('add-error', res.error); }
+                });
+        }
+
+        function abrirEditar(id, nombre, fechaInicio, fechaFin, activa) {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-nombre').value = nombre;
+            document.getElementById('edit-fecha-inicio').value = fechaInicio;
+            document.getElementById('edit-fecha-fin').value = fechaFin;
+            document.getElementById('edit-activa').checked = (activa === 1 || activa === '1' || activa === true);
+            new bootstrap.Modal(document.getElementById('modalEditar')).show();
+        }
+
+        function guardarEditar() {
+            const nombre = document.getElementById('edit-nombre').value.trim();
+            const fechaInicio = document.getElementById('edit-fecha-inicio').value;
+            const fechaFin = document.getElementById('edit-fecha-fin').value;
+            const activa = document.getElementById('edit-activa').checked ? 1 : 0;
+
+            if (!nombre) { mostrarErrorModal('edit-error', 'El nombre de la temporada es obligatorio.'); return; }
+            if (fechaInicio && fechaFin && fechaFin < fechaInicio) {
+                mostrarErrorModal('edit-error', 'La fecha de fin no puede ser anterior a la de inicio.');
+                return;
+            }
+
+            const datos = {
+                id_temporada: document.getElementById('edit-id').value,
+                nombre,
+                fecha_inicio: fechaInicio,
+                fecha_fin: fechaFin,
+                activa
+            };
+
+            fetch('../backend/temporadas/update_temporada.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
+            })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.ok) { window.location.reload(); }
+                    else { mostrarErrorModal('edit-error', res.error); }
+                });
+        }
+
+        function borrar(id) {
+            if (!confirm('¿Seguro que quieres eliminar esta temporada?')) return;
+
+            fetch('../backend/temporadas/delete_temporada.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_temporada: id })
+            })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.ok) { window.location.reload(); }
+                    else { alert('Error al borrar: ' + d.error); }
+                });
+        }
+    </script>
+
+</body>
+
+</html>
