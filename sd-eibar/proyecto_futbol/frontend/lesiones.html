@@ -224,6 +224,7 @@
                         roleBadge.textContent = data.rol.toUpperCase();
                         roleBadge.classList.remove('d-none');
                         if (data.rol === 'admin') document.body.classList.add('is-admin');
+                        if (data.rol === 'fisio') document.body.classList.add('is-admin');
                     } else {
                         btnLogin.classList.remove('d-none');
                         btnLogout.classList.add('d-none');

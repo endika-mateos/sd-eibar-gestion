@@ -360,7 +360,6 @@
                             </div>
                             <!-- fin carousel-inner -->
 
-                            <!-- Controles DENTRO del carousel -->
                             <button class="carousel-control-prev" type="button" data-bs-target="#carruselJugadores"
                                 data-bs-slide="prev">
                                 <span class="carousel-control-prev-icon"></span>
@@ -376,7 +375,7 @@
                     </div>
                     <!-- fin col-lg-8 -->
 
-                    <!-- Columna derecha: ultimo partido, top jugadores y lesiones -->
+                    <!-- Columna derecha: ultimo partido, top jugadores, lesiones y avisos -->
                     <div class="col-12 col-lg-4">
                         <div class="card border-0 shadow-sm rounded-4 h-100">
                             <div class="card-body p-4 d-flex flex-column gap-4">
@@ -402,6 +401,16 @@
                                 <div>
                                     <h5 class="fw-bold text-eibar-blue mb-2">🤕 Lesiones Activas</h5>
                                     <div id="avisos-lesiones">
+                                        <div class="text-center py-2">
+                                            <div class="spinner-border spinner-border-sm text-secondary"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- NUEVO: Avisos del sistema -->
+                                <div>
+                                    <h5 class="fw-bold text-eibar-blue mb-2">⚠️ Avisos del Sistema</h5>
+                                    <div id="avisos-sistema">
                                         <div class="text-center py-2">
                                             <div class="spinner-border spinner-border-sm text-secondary"></div>
                                         </div>
@@ -542,6 +551,7 @@
                 renderUltimoPartido(data.ultimo_partido);
                 renderTopJugadores(data.top_jugadores);
                 renderLesiones(data.lesiones_activas);
+                renderAvisosSistema(data.avisos_sin_puntuacion, data.avisos_incompletos);
             })
             .catch(err => console.error('Error dashboard:', err));
 
@@ -635,6 +645,38 @@
                     </div>
                 </div>`;
             }).join('');
+        }
+
+        // Muestra avisos de partidos sin puntuar e importaciones incompletas
+        function renderAvisosSistema(sinPuntuacion, incompletos) {
+            const el = document.getElementById('avisos-sistema');
+            const sinPunt = sinPuntuacion || [];
+            const incomp = incompletos || [];
+
+            if (sinPunt.length === 0 && incomp.length === 0) {
+                el.innerHTML = `<div class="alert alert-success py-2 mb-0 small">✅ Todo al día, sin avisos pendientes.</div>`;
+                return;
+            }
+
+            let html = '';
+
+            sinPunt.forEach(p => {
+                html += `
+                <div class="alert alert-danger py-2 mb-2 small d-flex justify-content-between align-items-center">
+                    <span>🔴 <strong>${p.rival}</strong> (${p.fecha}) — sin puntuaciones</span>
+                    <a href="partidos.html" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-0">Ver</a>
+                </div>`;
+            });
+
+            incomp.forEach(p => {
+                html += `
+                <div class="alert alert-warning py-2 mb-2 small d-flex justify-content-between align-items-center">
+                    <span>🟡 <strong>${p.rival}</strong> (${p.fecha}) — ${p.pendientes} jugador${p.pendientes > 1 ? 'es' : ''} sin puntuar</span>
+                    <a href="partidos.html" class="btn btn-sm btn-outline-warning rounded-pill px-2 py-0">Ver</a>
+                </div>`;
+            });
+
+            el.innerHTML = html;
         }
     </script>
 

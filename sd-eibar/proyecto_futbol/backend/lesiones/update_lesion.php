@@ -1,6 +1,6 @@
 <?php
 
-require '../requiere_admin.php';
+require '../requiere_fisio_o_admin.php';
 require '../conexion.php';
 
 $data = json_decode(file_get_contents('php://input'), true);
