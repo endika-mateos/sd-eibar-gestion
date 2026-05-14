@@ -7,7 +7,7 @@ $data     = json_decode(file_get_contents('php://input'), true);
 $usuario  = $data['usuario'] ?? '';
 $password = $data['password'] ?? '';
 
-$sql  = "SELECT id_usuario, contraseña_hash, rol FROM usuarios WHERE nombre_usuario = ?";
+$sql  = "SELECT id_usuario, contrasena_hash, rol FROM usuarios WHERE nombre_usuario = ?";
 $stmt = $conexion->prepare($sql);
 $stmt->bind_param("s", $usuario);
 $stmt->execute();
@@ -20,7 +20,7 @@ if (!$fila) {
     exit;
 }
 
-$passwordValida = ($password === $fila['contraseña_hash']) || password_verify($password, $fila['contraseña_hash']);
+$passwordValida = ($password === $fila['contrasena_hash']) || password_verify($password, $fila['contrasena_hash']);
 
 if (!$passwordValida) {
     echo json_encode(['ok' => false, 'error' => 'Contraseña incorrecta']);
